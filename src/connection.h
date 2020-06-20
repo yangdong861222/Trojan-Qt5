@@ -30,11 +30,14 @@
 #include "tun2socksthread.h"
 #include "v2raythread.h"
 #include "trojanthread.h"
+#include "snellthread.h"
 #include "systemproxyhelper.h"
 #include "tqprofile.h"
 #include "routetablehelper.h"
 #include "ssgoapi.h"
+#include "v2rayapi.h"
 #include "trojangoapi.h"
+#include "snellgoapi.h"
 
 class Connection : public QObject
 {
@@ -73,25 +76,28 @@ public slots:
     void stop();
     void onStartFailed();
     void onNotifyConnectionChanged();
-    void onLog(QString string);
 
 private:
-    QString configFile;
     HttpProxy *http;
     SSThread *ss;
     std::unique_ptr<SSRThread> ssr;
     Tun2socksThread *tun2socks;
     V2rayThread *v2ray;
     TrojanThread *trojan;
+    SnellThread *snell;
     RouteTableHelper *rhelper;
     SSGoAPI *ssGoAPI;
-
+    V2rayAPI *v2rayAPI;
     TrojanGoAPI *trojanGoAPI;
+    SnellGoAPI *snellGoAPI;
+
     TQProfile profile;
     bool running;
 
     void testAddressLatency(const QHostAddress &addr);
 
+    friend class Socks5EditDialog;
+    friend class HttpEditDialog;
     friend class SSEditDialog;
     friend class SSREditDialog;
     friend class VmessEditDialog;

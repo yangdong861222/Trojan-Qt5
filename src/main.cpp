@@ -12,8 +12,14 @@
 #include "resourcehelper.h"
 #include "logger.h"
 #include "midman.h"
+#include "eventfilter.h"
+#include "themehelper.h"
 
 #include "LetsMove/PFMoveApplication.h"
+
+#if defined (Q_OS_WIN)
+#include "urlschemeregister.h"
+#endif
 
 #ifdef Q_OS_MAC
 #include <objc/objc.h>
@@ -58,10 +64,6 @@ void setupApplication(QApplication &a)
 #if defined(Q_OS_WIN) || defined(Q_OS_MAC)
     QIcon::setThemeName("Breeze");
 #endif
-
-    QTranslator *trojanqt5t = new QTranslator(&a);
-    trojanqt5t->load(QString(":/i18n/trojan-qt5_%1").arg(QLocale::system().name()));
-    a.installTranslator(trojanqt5t);
 }
 
 #if defined (Q_OS_MAC)
@@ -79,15 +81,15 @@ void setupDockClickHandler() {
         SEL shouldHandle = sel_registerName("applicationShouldHandleReopen:hasVisibleWindows:");
         if (class_getInstanceMethod(delClass, shouldHandle)) {
             if (class_replaceMethod(delClass, shouldHandle, (IMP)dockClickHandler, "B@:"))
-                Logger::debug("Registered dock click handler (replaced original method");
+                return;
             else
-                Logger::warning("Failed to replace method for dock click handler");
+                Logger::warning("[Dock] Failed to replace method for dock click handler");
         }
         else {
             if (class_addMethod(delClass, shouldHandle, (IMP)dockClickHandler,"B@:"))
-                Logger::debug("Registered dock click handler");
+                return;
             else
-                Logger::warning("Failed to register dock click handler");
+                Logger::warning("[Dock] Failed to register dock click handler");
         }
     }
 }
@@ -113,7 +115,10 @@ int main(int argc, char *argv[])
     qRegisterMetaTypeStreamOperators<TQProfile>("TQProfile");
     qRegisterMetaTypeStreamOperators<TQSubscribe>("TQSubscribe");
 
-    QApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
+    QCoreApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
+#if QT_VERSION >= QT_VERSION_CHECK(5, 14, 0)
+    QGuiApplication::setHighDpiScaleFactorRoundingPolicy(Qt::HighDpiScaleFactorRoundingPolicy::PassThrough);
+#endif
 
     QApplication a(argc, argv);
     setupApplication(a);
@@ -142,13 +147,37 @@ int main(int argc, char *argv[])
 
     ConfigHelper conf(configFile);
 
+    ResourceHelper::copyDatFiles();
+
     // setup the theme here
-    a.setStyle(conf.getTheme());
+    a.setStyle(conf.getGeneralSettings()["theme"].toString());
+
+    // register theme dynamic changer
+    ThemeHelper::registerListen();
+
+    // apply light/dark theme
+    ThemeHelper::setupTheme();
+
+    // apply language according to settings
+    QTranslator *trojanqt5t = new QTranslator(&a);
+    if (conf.getGeneralSettings()["language"].toString() == "Follow System")
+        trojanqt5t->load(QString(":/i18n/trojan-qt5_%1").arg(QLocale::system().name()));
+    else
+        trojanqt5t->load(QString(":/i18n/trojan-qt5_%1").arg(conf.getGeneralSettings()["language"].toString()));
+    a.installTranslator(trojanqt5t);
+
+#if defined (Q_OS_WIN)
+    UrlSchemeRegister *reg;
+    if (!reg->CheckAllUrlScheme())
+        reg->RegisterAllUrlScheme();
+#endif
 
     MainWindow w(&conf);
     mainWindow = &w;
 
-    if (conf.isOnlyOneInstance() && w.isInstanceRunning()) {
+    a.installEventFilter(new EventFilter(&w));
+
+    if (conf.getGeneralSettings()["onlyOneInstace"].toBool() && w.isInstanceRunning()) {
         return -1;
     }
 
@@ -163,7 +192,7 @@ int main(int argc, char *argv[])
     //start all servers which were configured to start at startup
     w.startAutoStartConnections();
 
-    if (!conf.isHideWindowOnStartup()) {
+    if (!conf.getGeneralSettings()["hideWindowOnStartup"].toBool()) {
         w.show();
     }
 

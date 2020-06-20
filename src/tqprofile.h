@@ -30,10 +30,17 @@ struct TQProfile
     TQProfile();
     TQProfile(const QString &uri);
 
+    TQProfile fromSocks5Uri(const std::string& socks5Uri) const;
+    TQProfile fromHttpUri(const std::string& httpUri) const;
     TQProfile fromSSUri(const std::string& ssUri) const;
+    TQProfile fromOldSSUri(const std::string& ssUri) const;
     TQProfile fromSSRUri(const std::string& trojanUri) const;
     TQProfile fromVmessUri(const std::string& vmessUri) const;
     TQProfile fromTrojanUri(const std::string& trojanUri) const;
+    TQProfile fromSnellUri(const std::string& snellUri) const;
+
+    QString toSocks5Uri() const;
+    QString toHttpUri() const;
     QString toSSUri() const;
     QString toSSRUri() const;
     QString toVmessUri() const;
@@ -50,11 +57,15 @@ struct TQProfile
     QString serverAddress;
     QString password;
     int latency;
-    quint64 currentUsage;
-    quint64 totalUsage;
+    quint64 currentDownloadUsage;
+    quint64 currentUploadUsage;
+    quint64 totalDownloadUsage;
+    quint64 totalUploadUsage;
     QDateTime lastTime; //last time this connection is used
     QDate nextResetDate; //next scheduled date to reset data usage
-    // ss/ssr only
+    // socks5/http only
+    QString username;
+    // ss/ssr/snell only
     QString method;
     QString protocol;
     QString protocolParam;
@@ -69,9 +80,11 @@ struct TQProfile
     bool sessionTicket;
     bool reusePort;
     bool tcpFastOpen;
-    bool mux;
     bool websocket;
     bool websocketDoubleTLS;
+    bool mux;
+    int muxConcurrency;
+    int muxIdleTimeout;
     QString sni;
     QString websocketPath;
     QString websocketHostname;

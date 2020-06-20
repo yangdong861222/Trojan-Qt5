@@ -166,7 +166,8 @@ bool ConnectionTableModel::isExisted(Connection *newCon)
     for (auto &i : items) {
         Connection *con = i->getConnection();
         if (con->getProfile().serverAddress == newCon->getProfile().serverAddress &&
-            con->getProfile().serverPort == newCon->getProfile().serverPort)
+            con->getProfile().serverPort == newCon->getProfile().serverPort &&
+            con->getProfile().vmessSettings == newCon->getProfile().vmessSettings)
             return true;
     }
     return false;
@@ -194,6 +195,7 @@ void ConnectionTableModel::replace(Connection *newCon)
             p.websocket = newCon->getProfile().websocket;
             p.name = newCon->getProfile().name;
             p.vmessSettings = newCon->getProfile().vmessSettings;
+            p.group = newCon->getProfile().group;
             con->setProfile(p);
         }
 
@@ -216,6 +218,18 @@ QList<TQProfile> ConnectionTableModel::getAllServers()
     }
 
     return servers;
+}
+
+TQProfile ConnectionTableModel::getConnectedServer()
+{
+    for (auto &i : items) {
+        Connection *con = i->getConnection();
+        if (con->isRunning()) {
+            return con->getProfile();
+        }
+    }
+
+    return TQProfile();
 }
 
 void ConnectionTableModel::onConnectionStateChanged(bool running)

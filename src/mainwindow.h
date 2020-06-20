@@ -21,6 +21,8 @@
 
 #include <QMainWindow>
 #include <QLocalServer>
+#include <QPointer>
+
 #include "connectiontablemodel.h"
 #include "connectionsortfilterproxymodel.h"
 #include "confighelper.h"
@@ -33,6 +35,8 @@
 #include "sparkle/CocoaInitializer.h"
 #include "sparkle/SparkleAutoUpdater.h"
 #endif
+
+class StatusBar;
 
 
 QT_BEGIN_NAMESPACE
@@ -49,13 +53,19 @@ public:
 
     void startAutoStartConnections();
     QList<TQProfile> getAllServers();
-    TQProfile getSelectedServer();
+    TQProfile getConnectedServer();
     void onAddServerFromSystemTray(QString type);
     void onToggleServerFromSystemTray(TQProfile profile);
     bool isInstanceRunning() const;
 
+public slots:
+    void onHandleDataFromUrlScheme(const QString &);
+    void onAddURIFromSubscribe(TQProfile);
+
 private:
     Ui::MainWindow *ui;
+
+    QPointer<StatusBar> m_statusBar;
 
     ConnectionTableModel *model;
     ConnectionSortFilterProxyModel *proxyModel;
@@ -82,7 +92,6 @@ private:
 
 private slots:
     void onToggleConnection(bool);
-    void onAddURIFromSubscribe(QString);
     void onImportGuiJson();
     void onImportConfigYaml();
     void onExportGuiJson();
@@ -105,6 +114,7 @@ private slots:
     void onDisconnect();
     void onConnectionStatusChanged(const int row, const bool running);
     void onLatencyTest();
+    void onClearTrafficStats();
     void onMoveUp();
     void onMoveDown();
     void onGeneralSettings();
@@ -112,7 +122,7 @@ private slots:
     void checkCurrentIndex(const QModelIndex &index);
     void onAbout();
     void onGuiLog();
-    void onTrojanLog();
+    void onCoreLog();
     void onReportBug();
     void onCustomContextMenuRequested(const QPoint &pos);
     void onFilterToggled(bool);
@@ -120,7 +130,6 @@ private slots:
     void onQRCodeCapturerResultFound(const QString &uris);
     void onCheckUpdate();
     void onStatusAvailable(const quint64 &u, const quint64 &d);
-    QString bytesConvertor(const quint64 &);
     void onSingleInstanceConnect();
 
 protected slots:

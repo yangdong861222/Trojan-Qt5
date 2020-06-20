@@ -1,9 +1,7 @@
 #include "confighelper.h"
 #include "tun2socksthread.h"
 #include <QProcess>
-#if defined (Q_OS_WIN)
-#include <QCoreApplication>
-#endif
+#include "utils.h"
 #include "trojan-qt5-core.h"
 
 Tun2socksThread::Tun2socksThread()
@@ -16,17 +14,12 @@ Tun2socksThread::~Tun2socksThread()
 
 void Tun2socksThread::run()
 {
-#ifdef Q_OS_WIN
-    QString configFile = QCoreApplication::applicationDirPath() + "/config.ini";
-#else
-    QString configFile = QDir::homePath() + "/.config/trojan-qt5/config.ini";
-#endif
-    ConfigHelper *conf = new ConfigHelper(configFile);
+    ConfigHelper *conf = Utils::getConfigHelper();
     QString tunName = "tun1";
     QString tunAddr = "240.0.0.2";
     QString tunGw = "240.0.0.1";
     QString tunDns = "8.8.4.4,8.8.8.8";
-    QString proxyServer = QString("%1:%2").arg("127.0.0.1").arg(conf->getSocks5Port());
+    QString proxyServer = QString("%1:%2").arg("127.0.0.1").arg(conf->getInboundSettings()["socks5LocalPort"].toInt());
 
 #if defined (Q_OS_WIN)
     tunAddr = "10.0.0.2";

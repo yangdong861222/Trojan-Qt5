@@ -35,6 +35,8 @@ public:
      */
     explicit ConfigHelper(const QString &configuration, QObject *parent = nullptr);
 
+    void onConfigUpdateFromOldVersion();
+
     /*
      * Call read() function to read all connection profiles into
      * specified ConnectionTableModel.
@@ -70,9 +72,10 @@ public:
 
     Connection* configJsonToConnection(const QString &file);
 
-    void connectionToJson(TQProfile &profile);
-
+    void generateSocks5HttpJson(QString type, TQProfile &profile);
     void generateV2rayJson(TQProfile &profile);
+    void generateTrojanJson(TQProfile &profile);
+    void generateSnellJson(TQProfile &profile);
 
     void generateHaproxyConf(const ConnectionTableModel &model);
 
@@ -83,52 +86,24 @@ public:
     void setStartAtLogin();
 
     /* some functions used to communicate with SettingsDialog */
-    QString getTheme() const;
-    QJsonObject getRoute() const;
-    int getFLSFingerPrint() const;
+    QJsonArray appendJsonArray(QJsonArray array1, QJsonArray array2);
+    QString parseDomainStrategy(QString ds) const;
     QString parseTLSFingerprint(int choice) const;
-    int  getToolbarStyle() const;
-    int  getLogLevel() const;
-    int getSocks5Port() const;
-    int getHttpPort() const;
-    int getPACPort() const;
-    int getHaproxyPort() const;
-    int getHaproxyStatusPort() const;
-    bool isEnableForwardProxy() const;
-    int getForwardProxyType() const;
-    QString getForwardProxyAddress() const;
-    int getForwardProxyPort() const;
-    bool isEnableForwardProxyAuthentication() const;
-    QString getForwardProxyUsername() const;
-    QString getForwardProxyPassword() const;
-    int getGfwlistUrl() const;
-    QString getUpdateUserAgent() const;
-    QString getFilterKeyword() const;
-    int getMaximumSubscribe() const;
-    bool isEnableTrojanAPI() const;
-    bool isEnableTrojanRouter() const;
-    int getTrojanAPIPort() const;
-    QString getTrojanCertPath() const;
-    QString getTrojanCipher() const;
-    QString getTrojanCipherTLS13() const;
+    QJsonObject getGeneralSettings() const;
+    QJsonObject getInboundSettings() const;
+    QJsonObject getOutboundSettings() const;
+    QJsonObject getTestSettings() const;
+    QJsonObject getGraphSettings() const;
+    QJsonObject getRouterSettings() const;
+    QJsonObject getSubscribeSettings() const;
+    QJsonObject getTrojanSettings() const;
     QString getSystemProxySettings() const;
     bool isTrojanOn() const;
     bool isEnableServerLoadBalance() const;
-    bool isShareOverLan() const;
-    bool isEnableIpv6Support() const;
-    bool isEnableHttpMode() const;
-    bool isHideWindowOnStartup() const;
-    bool isStartAtLogin() const;
-    bool isOnlyOneInstance() const;
-    bool isCheckPortAvailability() const;
-    bool isEnableNotification() const;
-    bool isHideDockIcon() const;
     bool isAutoUpdateSubscribes() const;
     bool isShowToolbar() const;
     bool isShowFilterBar() const;
-    bool isNativeMenuBar() const;
-    void setRoute(QJsonObject r);
-    void setGeneralSettings(int ts, bool hide, QString th, bool sal, bool oneInstance, bool cpa, bool en, bool hdi, bool nativeMB, int ll, bool hm, bool eis, bool sol, int sp, int hp, int pp, int ap, int hsp, bool efp, int fpt, QString fpa, int fpp, bool efpa, QString fpu, QString fppa, int glu, QString uua, QString fkw, int ms, int fp, bool eta, bool etr, int tap, QString tcp, QString tc, QString tct13);
+    void setGeneralSettings(QJsonObject gs, QJsonObject is, QJsonObject os, QJsonObject es, QJsonObject ss, QJsonObject fs, QJsonObject rs, QJsonObject ts);
     void setSystemProxySettings(QString mode);
     void setTrojanOn(bool on);
     void setAutoUpdateSubscribes(bool update);
@@ -151,49 +126,20 @@ signals:
     void toolbarStyleChanged(const Qt::ToolButtonStyle);
 
 private:
-    QString theme;
-    QJsonObject route;
-    int logLevel;
-    int toolbarStyle;
-    bool enableHttpMode;
-    int socks5Port;
-    int httpPort;
-    int pacPort;
-    int haproxyStatusPort;
-    int haproxyPort;
-    bool enableForwardProxy;
-    int forwardProxyType;
-    QString forwardProxyAddress;
-    int forwardProxyPort;
-    bool enableForwardProxyAuthentication;
-    QString forwardProxyUsername;
-    QString forwardProxyPassword;
-    int gfwlistUrl;
-    QString updateUserAgent;
-    QString filterKeyword;
-    int maximumSubscribe;
-    bool enableTrojanAPI;
-    bool enableTrojanRouter;
-    int fingerprint;
-    int trojanAPIPort;
-    QString trojanCertPath;
-    QString trojanCipher;
-    QString trojanCipherTLS13;
+    QJsonObject generalSettings;
+    QJsonObject inboundSettings;
+    QJsonObject outboundSettings;
+    QJsonObject testSettings;
+    QJsonObject graphSettings;
+    QJsonObject routerSettings;
+    QJsonObject subscribeSettings;
+    QJsonObject trojanSettings;
     QString systemProxyMode;
     bool trojanOn;
     bool serverLoadBalance;
-    bool shareOverLan;
-    bool enableIpv6Support;
     bool autoUpdateSubscribes;
-    bool hideWindowOnStartup;
-    bool startAtLogin;
-    bool onlyOneInstace;
-    bool checkPortAvailability;
-    bool enableNotification;
-    bool hideDockIcon;
     bool showToolbar;
     bool showFilterBar;
-    bool nativeMenuBar;
     QSettings *settings;
     QString configFile;
 
